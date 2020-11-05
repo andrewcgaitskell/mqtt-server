@@ -20,18 +20,3 @@ control C to exit subscribe
 
 mosquitto_pub -h localhost -t test -m "hello world"
 
-# settting up encryption
-
-add-apt-repository ppa:certbot/certbot
-
-apt update
-apt install certbot
-
-# open ports
-
-80
-443
-
-## generate certificate
-
-certbot certonly --standalone --standalone-supported-challenges http-01 -d mqtt.example.com
