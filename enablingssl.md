@@ -9,3 +9,6 @@ nano /etc/mosquitto/conf.d/default.conf
     keyfile /etc/letsencrypt/live/acgdata.info/privkey.pem
 
 systemctl restart mosquitto
+
+
+mosquitto_pub -h acgdata.info -t test -m "hello again" -p 8883 --capath /etc/ssl/certs/ -u "mqttuser" -P "password"
