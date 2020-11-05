@@ -1,39 +1,42 @@
+sudo su
 
-# add the fixed external ip to godaddy
+apt install nginx
 
-An A record with www.example.com pointing to your server’s public IP address.
+## check server
 
-# sign into vm
+systemctl status nginx
 
-  sudo su
+if you get an error
 
-  add-apt-repository ppa:certbot/certbot
+mkdir /etc/systemd/system/nginx.service.d
 
-You’ll need to press ENTER to accept. Then, update the package list to pick up the new repository’s package information.
+printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" > /etc/systemd/system/nginx.service.d/override.conf
 
-# update packages
+systemctl daemon-reload
 
-apt update
+systemctl restart nginx 
 
-# install certbot's nginx 
+systemctl status nginx
 
-And finally, install Certbot’s Nginx package with apt-get.
+Step 1 — Installing Certbot
+
+add-apt-repository ppa:certbot/certbot
+
+apt-get update
 
 apt install python-certbot-nginx
+sudo systemctl reload nginx
 
-Certbot is now ready to use, but in order for it to configure SSL for Nginx, we need to verify some of Nginx’s configuration.
+HTTPS Through the Firewall
 
-copy /etc/nginx/sites-enabled/example.com /etc/nginx/sites-available/example.com
+The Nginx plugin will take care of reconfiguring Nginx and reloading the config whenever necessary:
 
-# verify the syntax of your configuration edits.
+    sudo certbot --nginx -d example.com -d www.example.com
 
-nginx -t
+    sudo certbot --nginx -d acgdata.info -d www.acgdata.info
 
-# generate and install keys
+This runs certbot with the --nginx plugin, using -d to specify the names we’d like the certificate to be valid for.
 
-certbot --nginx -d example.com -d www.example.com
-
-certbot --nginx -d acgdata.info -d www.acgdata.info
 
 # back up keys
 
