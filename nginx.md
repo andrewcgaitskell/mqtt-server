@@ -20,14 +20,15 @@ systemctl status nginx
 
 Step 1 — Installing Certbot
 
-add-apt-repository ppa:certbot/certbot
+    add-apt-repository ppa:certbot/certbot
 
-apt-get update
+    apt-get update
 
-apt install python-certbot-nginx
-sudo systemctl reload nginx
+    apt install python-certbot-nginx
 
-HTTPS Through the Firewall
+    sudo systemctl reload nginx
+
+## HTTPS Through the Firewall
 
 The Nginx plugin will take care of reconfiguring Nginx and reloading the config whenever necessary:
 
@@ -36,6 +37,8 @@ The Nginx plugin will take care of reconfiguring Nginx and reloading the config 
     sudo certbot --nginx -d acgdata.info -d www.acgdata.info
 
 This runs certbot with the --nginx plugin, using -d to specify the names we’d like the certificate to be valid for.
+
+Visit www.acgdata.info
 
 
 # back up keys
