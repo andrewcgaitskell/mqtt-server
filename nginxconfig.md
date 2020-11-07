@@ -339,6 +339,8 @@ sudo less /var/log/nginx/error.log: checks the Nginx error logs.
 sudo less /var/log/nginx/access.log: checks the Nginx access logs.
 sudo journalctl -u nginx: checks the Nginx process logs.
 sudo journalctl -u myproject: checks your Flask app’s uWSGI logs.
+
+
 Step 7 — Securing the Application
 To ensure that traffic to your server remains secure, let’s get an SSL certificate for your domain. There are multiple ways to do this, including getting a free certificate from Let’s Encrypt, generating a self-signed certificate, or buying one from another provider and configuring Nginx to use it by following Steps 2 through 6 of  How to Create a Self-signed SSL Certificate for Nginx in Ubuntu 18.04. We will go with option one for the sake of expediency.
 
