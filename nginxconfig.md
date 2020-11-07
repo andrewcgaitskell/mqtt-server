@@ -311,6 +311,14 @@ server {
 }
 Save and close the file when you’re finished.
 
+location = /hello { rewrite ^ /hello/; }
+location /hello { try_files $uri @hello; }
+location @hello {
+  include uwsgi_params;
+  uwsgi_pass unix:/home/mqttuser/hello/hello.sock;
+}
+
+
 To enable the Nginx server block configuration you’ve just created, link the file to the sites-enabled directory:
 
 sudo ln -s /etc/nginx/sites-available/myproject /etc/nginx/sites-enabled
