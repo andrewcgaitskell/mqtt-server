@@ -1,10 +1,7 @@
+Started with :
 https://www.digitalocean.com/community/tutorials/how-to-serve-flask-applications-with-uswgi-and-nginx-on-ubuntu-18-04
 
-Introduction
-In this guide, you will build a Python application using the Flask microframework on Ubuntu 18.04. The bulk of this article will be about how to set up the uWSGI application server and how to launch the application and configure Nginx to act as a front-end reverse proxy.
 
-Prerequisites
-Before starting this guide, you should have:
 
 A server with Ubuntu 18.04 installed and a non-root user with sudo privileges. Follow our initial server setup guide for guidance.
 Nginx installed, following Steps 1 and 2 of How To Install Nginx on Ubuntu 18.04.
