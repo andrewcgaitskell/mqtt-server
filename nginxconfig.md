@@ -31,11 +31,13 @@ cd ~/myproject
 Create a virtual environment to store your Flask project’s Python requirements by typing:
 
 python3.6 -m venv myprojectenv
+
 This will install a local copy of Python and pip into a directory called myprojectenv within your project directory.
 
 Before installing applications within the virtual environment, you need to activate it. Do so by typing:
 
 source myprojectenv/bin/activate
+
 Your prompt will change to indicate that you are now operating within the virtual environment. It will look something like this (myprojectenv)user@host:~/myproject$.
 
 Step 3 — Setting Up a Flask Application
