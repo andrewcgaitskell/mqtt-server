@@ -1,15 +1,14 @@
 Started with :
 https://www.digitalocean.com/community/tutorials/how-to-serve-flask-applications-with-uswgi-and-nginx-on-ubuntu-18-04
 
+A server with Ubuntu 18.04 installed and a non-root user with sudo privileges.
 
-
-A server with Ubuntu 18.04 installed and a non-root user with sudo privileges. Follow our initial server setup guide for guidance.
-Nginx installed, following Steps 1 and 2 of How To Install Nginx on Ubuntu 18.04.
 A domain name configured to point to your server. You can purchase one on Namecheap or get one for free on Freenom. You can learn how to point domains to DigitalOcean by following the relevant documentation on domains and DNS. Be sure to create the following DNS records:
 
 An A record with your_domain pointing to your server’s public IP address.
 An A record with www.your_domain pointing to your server’s public IP address.
 Familiarity with uWSGI, our application server, and the WSGI specification. This discussion of definitions and concepts goes over both in detail.
+
 Step 1 — Installing the Components from the Ubuntu Repositories
 Our first step will be to install all of the pieces that we need from the Ubuntu repositories. We will install pip, the Python package manager, to manage our Python components. We will also get the Python development files necessary to build uWSGI.
 
@@ -68,11 +67,11 @@ def hello():
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
+
 This basically defines what content to present when the root domain is accessed. Save and close the file when you’re finished.
 
 If you followed the initial server setup guide, you should have a UFW firewall enabled. To test the application, you need to allow access to port 5000:
 
-sudo ufw allow 5000
 Now, you can test your Flask app by typing:
 
 python myproject.py
@@ -153,6 +152,7 @@ module = wsgi:app
 
 master = true
 processes = 5
+
 When you were testing, you exposed uWSGI on a network port. However, you’re going to be using Nginx to handle actual client connections, which will then pass requests to uWSGI. Since these components are operating on the same computer, a Unix socket is preferable because it is faster and more secure. Let’s call the socket myproject.sock and place it in this directory.
 
 Let’s also change the permissions on the socket. We’ll be giving the Nginx group ownership of the uWSGI process later on, so we need to make sure the group owner of the socket can read information from it and write to it. We will also clean up the socket when the process stops by adding the vacuum option:
@@ -167,6 +167,8 @@ processes = 5
 socket = myproject.sock
 chmod-socket = 660
 vacuum = true
+
+
 The last thing we’ll do is set the die-on-term option. This can help ensure that the init system and uWSGI have the same assumptions about what each process signal means. Setting this aligns the two system components, implementing the expected behavior:
 
 ~/myproject/myproject.ini
@@ -181,6 +183,7 @@ chmod-socket = 660
 vacuum = true
 
 die-on-term = true
+
 You may have noticed that we did not specify a protocol like we did from the command line. That is because by default, uWSGI speaks using the uwsgi protocol, a fast binary protocol designed to communicate with other servers. Nginx can speak this protocol natively, so it’s better to use this than to force communication by HTTP.
 
 When you are finished, save and close the file.
@@ -191,6 +194,9 @@ Next, let’s create the systemd service unit file. Creating a systemd unit file
 Create a unit file ending in .service within the /etc/systemd/system directory to begin:
 
 sudo nano /etc/systemd/system/myproject.service
+
+sudo nano /etc/systemd/system/hello.service
+
 Inside, we’ll start with the [Unit] section, which is used to specify metadata and dependencies. Let’s put a description of our service here and tell the init system to only start this after the networking target has been reached:
 
 /etc/systemd/system/myproject.service
@@ -212,16 +218,22 @@ Next, let’s map out the working directory and set the PATH environmental varia
 Remember to replace the username and project paths with your own information:
 
 /etc/systemd/system/myproject.service
+
 [Unit]
-Description=uWSGI instance to serve myproject
+Description=uWSGI instance to serve hello
 After=network.target
 
 [Service]
-User=sammy
+User=mqttuser
 Group=www-data
-WorkingDirectory=/home/sammy/myproject
-Environment="PATH=/home/sammy/myproject/myprojectenv/bin"
-ExecStart=/home/sammy/myproject/myprojectenv/bin/uwsgi --ini myproject.ini
+WorkingDirectory=/home/mqttuser/hello
+Environment="PATH=/home/mqttuser/hello/env/bin"
+ExecStart=/home/mqttuser/hello/env/bin/uwsgi --ini hello.ini
+
+[Install]
+WantedBy=multi-user.target
+
+
 Finally, let’s add an [Install] section. This will tell systemd what to link this service to if we enable it to start at boot. We want this service to start when the regular multi-user system is up and running:
 
 /etc/systemd/system/myproject.service
@@ -238,15 +250,20 @@ ExecStart=/home/sammy/myproject/myprojectenv/bin/uwsgi --ini myproject.ini
 
 [Install]
 WantedBy=multi-user.target
+
 With that, our systemd service file is complete. Save and close it now.
 
 We can now start the uWSGI service we created and enable it so that it starts at boot:
 
-sudo systemctl start myproject
-sudo systemctl enable myproject
+sudo systemctl start hello
+sudo systemctl enable hello
+
+
 Let’s check the status:
 
-sudo systemctl status myproject
+sudo systemctl status hello
+
+
 You should see output like this:
 
 Output
@@ -269,24 +286,25 @@ Our uWSGI application server should now be up and running, waiting for requests 
 
 Begin by creating a new server block configuration file in Nginx’s sites-available directory. Let’s call this myproject to keep in line with the rest of the guide:
 
-sudo nano /etc/nginx/sites-available/myproject
+sudo nano /etc/nginx/sites-available/hello
+
 Open up a server block and tell Nginx to listen on the default port 80. Let’s also tell it to use this block for requests for our server’s domain name:
 
-/etc/nginx/sites-available/myproject
+/etc/nginx/sites-available/hello
 server {
     listen 80;
-    server_name your_domain www.your_domain;
+    server_name your_domain www.acgdata.info;
 }
 Next, let’s add a location block that matches every request. Within this block, we’ll include the uwsgi_params file that specifies some general uWSGI parameters that need to be set. We’ll then pass the requests to the socket we defined using the uwsgi_pass directive:
 
-/etc/nginx/sites-available/myproject
+/etc/nginx/sites-available/hello
 server {
     listen 80;
     server_name your_domain www.your_domain;
 
     location / {
         include uwsgi_params;
-        uwsgi_pass unix:/home/sammy/myproject/myproject.sock;
+        uwsgi_pass unix:/home/mqttuser/hello/hello.sock;
     }
 }
 Save and close the file when you’re finished.
@@ -294,6 +312,10 @@ Save and close the file when you’re finished.
 To enable the Nginx server block configuration you’ve just created, link the file to the sites-enabled directory:
 
 sudo ln -s /etc/nginx/sites-available/myproject /etc/nginx/sites-enabled
+
+sudo ln -s /etc/nginx/sites-available/hello /etc/nginx/sites-enabled
+
+
 With the file in that directory, we can test for syntax errors by typing:
 
 sudo nginx -t
