@@ -1,3 +1,5 @@
+sudo apt install build-essential -y
+
 sudo apt install python-software-properties -y
 
 sudo apt install software-properties-common -y
