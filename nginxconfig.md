@@ -132,10 +132,15 @@ When you have confirmed that it’s functioning properly, press CTRL-C in your t
 
 We’re now done with our virtual environment, so we can deactivate it:
 
+
+
 deactivate
+
+
 Any Python commands will now use the system’s Python environment again.
 
 Creating a uWSGI Configuration File
+
 You have tested that uWSGI is able to serve your application, but ultimately you will want something more robust for long-term usage. You can create a uWSGI configuration file with the relevant options for this.
 
 Let’s place that file in our project directory and call it myproject.ini:
