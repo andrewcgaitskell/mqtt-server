@@ -331,10 +331,11 @@ server {
     listen 80;
     server_name your_domain www.your_domain;
 
-    location / {
+    location /hello/ {
         include uwsgi_params;
-        uwsgi_pass unix:/home/mqttuser/hello/hello.sock;
-    }
+        uwsgi_pass http://unix:/home/mqttuser/hello/hello.sock:/;    }
+        
+        proxy_pass http://unix:/var/run/docker.sock:/;        
 }
 Save and close the file when you’re finished.
 
