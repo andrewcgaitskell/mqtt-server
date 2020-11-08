@@ -19,15 +19,18 @@ sudo apt install python3-pip python3-dev build-essential libssl-dev libffi-dev p
 With these packages in place, let’s move on to creating a virtual environment for our project.
 
 Step 2 — Creating a Python Virtual Environment
+
 Next, we’ll set up a virtual environment in order to isolate our Flask application from the other Python files on the system.
 
 Start by installing the python3-venv package, which will install the venv module:
 
 sudo apt install python3-venv
+
 Next, let’s make a parent directory for our Flask project. Move into the directory after you create it:
 
-mkdir ~/myproject
-cd ~/myproject
+    mkdir ~/myproject
+    cd ~/myproject
+
 Create a virtual environment to store your Flask project’s Python requirements by typing:
 
 python3.6 -m venv myprojectenv
@@ -41,34 +44,41 @@ source myprojectenv/bin/activate
 Your prompt will change to indicate that you are now operating within the virtual environment. It will look something like this (myprojectenv)user@host:~/myproject$.
 
 Step 3 — Setting Up a Flask Application
+
 Now that you are in your virtual environment, you can install Flask and uWSGI and get started on designing your application.
 
 First, let’s install wheel with the local instance of pip to ensure that our packages will install even if they are missing wheel archives:
 
 pip install wheel
+
 Note
+
 Regardless of which version of Python you are using, when the virtual environment is activated, you should use the pip command (not pip3).
 Next, let’s install Flask and uWSGI:
 
 pip install uwsgi flask
+
 Creating a Sample App
+
 Now that you have Flask available, you can create a simple application. Flask is a microframework. It does not include many of the tools that more full-featured frameworks might, and exists mainly as a module that you can import into your projects to assist you in initializing a web application.
 
 While your application might be more complex, we’ll create our Flask app in a single file, called myproject.py:
 
 nano ~/myproject/myproject.py
+
 The application code will live in this file. It will import Flask and instantiate a Flask object. You can use this to define the functions that should be run when a specific route is requested:
 
 ~/myproject/myproject.py
-from flask import Flask
-app = Flask(__name__)
 
-@app.route("/")
-def hello():
-    return "<h1 style='color:blue'>Hello There!</h1>"
+    from flask import Flask
+    app = Flask(__name__)
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+    @app.route("/")
+    def hello():
+        return "<h1 style='color:blue'>Hello There!</h1>"
+
+    if __name__ == "__main__":
+        app.run(host='0.0.0.0')
 
 This basically defines what content to present when the root domain is accessed. Save and close the file when you’re finished.
 
@@ -77,18 +87,20 @@ If you followed the initial server setup guide, you should have a UFW firewall e
 Now, you can test your Flask app by typing:
 
 python myproject.py
+
 You will see output like the following, including a helpful warning reminding you not to use this server setup in production:
 
 Output
-* Serving Flask app "myproject" (lazy loading)
- * Environment: production
-   WARNING: Do not use the development server in a production environment.
-   Use a production WSGI server instead.
- * Debug mode: off
- * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
-Visit your server’s IP address followed by :5000 in your web browser:
+    * Serving Flask app "myproject" (lazy loading)
+     * Environment: production
+       WARNING: Do not use the development server in a production environment.
+       Use a production WSGI server instead.
+     * Debug mode: off
+     * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+    Visit your server’s IP address followed by :5000 in your web browser:
 
 http://your_server_ip:5000
+
 You should see something like this:
 
 Flask sample app
@@ -96,11 +108,13 @@ Flask sample app
 When you are finished, hit CTRL-C in your terminal window to stop the Flask development server.
 
 Creating the WSGI Entry Point
+
 Next, let’s create a file that will serve as the entry point for our application. This will tell our uWSGI server how to interact with it.
 
 Let’s call the file wsgi.py:
 
 nano ~/myproject/wsgi.py
+
 In this file, let’s import the Flask instance from our application and then run it:
 
 ~/myproject/wsgi.py
@@ -108,12 +122,15 @@ from myproject import app
 
 if __name__ == "__main__":
     app.run()
+
 Save and close the file when you are finished.
 
 Step 4 — Configuring uWSGI
+
 Your application is now written with an entry point established. We can now move on to configuring uWSGI.
 
 Testing uWSGI Serving
+
 Let’s test to make sure that uWSGI can serve our application.
 
 We can do this by simply passing it the name of our entry point. This is constructed by the name of the module (minus the .py extension) plus the name of the callable within the application. In our case, this is wsgi:app.
@@ -121,9 +138,11 @@ We can do this by simply passing it the name of our entry point. This is constru
 Let’s also specify the socket, so that it will be started on a publicly available interface, as well as the protocol, so that it will use HTTP instead of the uwsgi binary protocol. We’ll use the same port number, 5000, that we opened earlier:
 
 uwsgi --socket 0.0.0.0:5000 --protocol=http -w wsgi:app
+
 Visit your server’s IP address with :5000 appended to the end in your web browser again:
 
 http://your_server_ip:5000
+
 You should see your application’s output again:
 
 Flask sample app
@@ -132,10 +151,7 @@ When you have confirmed that it’s functioning properly, press CTRL-C in your t
 
 We’re now done with our virtual environment, so we can deactivate it:
 
-
-
 deactivate
-
 
 Any Python commands will now use the system’s Python environment again.
 
@@ -146,6 +162,7 @@ You have tested that uWSGI is able to serve your application, but ultimately you
 Let’s place that file in our project directory and call it myproject.ini:
 
 nano ~/myproject/myproject.ini
+
 Inside, we will start off with the [uwsgi] header so that uWSGI knows to apply the settings. We’ll specify two things: the module itself, by referring to the wsgi.py file minus the extension, and the callable within the file, app:
 
 ~/myproject/myproject.ini
@@ -154,10 +171,12 @@ module = wsgi:app
 Next, we’ll tell uWSGI to start up in master mode and spawn five worker processes to serve actual requests:
 
 ~/myproject/myproject.ini
+
 [uwsgi]
 module = wsgi:app
 
 master = true
+
 processes = 5
 
 When you were testing, you exposed uWSGI on a network port. However, you’re going to be using Nginx to handle actual client connections, which will then pass requests to uWSGI. Since these components are operating on the same computer, a Unix socket is preferable because it is faster and more secure. Let’s call the socket myproject.sock and place it in this directory.
@@ -165,6 +184,7 @@ When you were testing, you exposed uWSGI on a network port. However, you’re go
 Let’s also change the permissions on the socket. We’ll be giving the Nginx group ownership of the uWSGI process later on, so we need to make sure the group owner of the socket can read information from it and write to it. We will also clean up the socket when the process stops by adding the vacuum option:
 
 ~/myproject/myproject.ini
+
 [uwsgi]
 module = wsgi:app
 
@@ -196,6 +216,7 @@ You may have noticed that we did not specify a protocol like we did from the com
 When you are finished, save and close the file.
 
 Step 5 — Creating a systemd Unit File
+
 Next, let’s create the systemd service unit file. Creating a systemd unit file will allow Ubuntu’s init system to automatically start uWSGI and serve the Flask application whenever the server boots.
 
 Create a unit file ending in .service within the /etc/systemd/system directory to begin:
@@ -289,6 +310,7 @@ Output
 If you see any errors, be sure to resolve them before continuing with the tutorial.
 
 Step 6 — Configuring Nginx to Proxy Requests
+
 Our uWSGI application server should now be up and running, waiting for requests on the socket file in the project directory. Let’s configure Nginx to pass web requests to that socket using the uwsgi protocol.
 
 Begin by creating a new server block configuration file in Nginx’s sites-available directory. Let’s call this myproject to keep in line with the rest of the guide:
@@ -334,16 +356,19 @@ sudo ln -s /etc/nginx/sites-available/hello /etc/nginx/sites-enabled
 With the file in that directory, we can test for syntax errors by typing:
 
 sudo nginx -t
+
 If this returns without indicating any issues, restart the Nginx process to read the new configuration:
 
 sudo systemctl restart nginx
+
 Finally, let’s adjust the firewall again. We no longer need access through port 5000, so we can remove that rule. We can then allow access to the Nginx server:
 
-sudo ufw delete allow 5000
-sudo ufw allow 'Nginx Full'
+Open Ports
+
 You should now be able to navigate to your server’s domain name in your web browser:
 
 http://your_domain
+
 You should see your application output:
 
 Flask sample app
@@ -351,25 +376,32 @@ Flask sample app
 If you encounter any errors, trying checking the following:
 
 sudo less /var/log/nginx/error.log: checks the Nginx error logs.
+
 sudo less /var/log/nginx/access.log: checks the Nginx access logs.
+
 sudo journalctl -u nginx: checks the Nginx process logs.
+
 sudo journalctl -u myproject: checks your Flask app’s uWSGI logs.
 
 
 Step 7 — Securing the Application
+
 To ensure that traffic to your server remains secure, let’s get an SSL certificate for your domain. There are multiple ways to do this, including getting a free certificate from Let’s Encrypt, generating a self-signed certificate, or buying one from another provider and configuring Nginx to use it by following Steps 2 through 6 of  How to Create a Self-signed SSL Certificate for Nginx in Ubuntu 18.04. We will go with option one for the sake of expediency.
 
 First, add the Certbot Ubuntu repository:
 
 sudo add-apt-repository ppa:certbot/certbot
+
 You’ll need to press ENTER to accept.
 
 Next, install Certbot’s Nginx package with apt:
 
 sudo apt install python-certbot-nginx
+
 Certbot provides a variety of ways to obtain SSL certificates through plugins. The Nginx plugin will take care of reconfiguring Nginx and reloading the config whenever necessary. To use this plugin, type the following:
 
 sudo certbot --nginx -d your_domain -d www.your_domain
+
 This runs certbot with the --nginx plugin, using -d to specify the names we’d like the certificate to be valid for.
 
 If this is your first time running certbot, you will be prompted to enter an email address and agree to the terms of service. After doing so, certbot will communicate with the Let’s Encrypt server, then run a challenge to verify that you control the domain you’re requesting a certificate for.
@@ -379,27 +411,45 @@ If that’s successful, certbot will ask how you’d like to configure your HTTP
 Output
 Please choose whether or not to redirect HTTP traffic to HTTPS, removing HTTP access.
 -------------------------------------------------------------------------------
+
 1: No redirect - Make no further changes to the webserver configuration.
+
 2: Redirect - Make all requests redirect to secure HTTPS access. Choose this for
 new sites, or if you're confident your site works on HTTPS. You can undo this
+
 change by editing your web server's configuration.
+
 -------------------------------------------------------------------------------
+
 Select the appropriate number [1-2] then [enter] (press 'c' to cancel):
+
 Select your choice then hit ENTER. The configuration will be updated, and Nginx will reload to pick up the new settings. certbot will wrap up with a message telling you the process was successful and where your certificates are stored:
 
 Output
+
 IMPORTANT NOTES:
- - Congratulations! Your certificate and chain have been saved at:
-   /etc/letsencrypt/live/your_domain/fullchain.pem
-   Your key file has been saved at:
-   /etc/letsencrypt/live/your_domain/privkey.pem
-   Your cert will expire on 2018-07-23. To obtain a new or tweaked
-   version of this certificate in the future, simply run certbot again
-   with the "certonly" option. To non-interactively renew *all* of
-   your certificates, run "certbot renew"
- - Your account credentials have been saved in your Certbot
-   configuration directory at /etc/letsencrypt. You should make a
-   secure backup of this folder now. This configuration directory will
+
+- Congratulations! Your certificate and chain have been saved at:
+
+/etc/letsencrypt/live/your_domain/fullchain.pem
+
+Your key file has been saved at:
+
+/etc/letsencrypt/live/your_domain/privkey.pem
+
+Your cert will expire on 2018-07-23. To obtain a new or tweaked
+
+version of this certificate in the future, simply run certbot again
+
+with the "certonly" option. To non-interactively renew *all* of
+
+your certificates, run "certbot renew"
+
+- Your account credentials have been saved in your Certbot
+
+configuration directory at /etc/letsencrypt. You should make a
+
+secure backup of this folder now. This configuration directory will
    also contain certificates and private keys obtained by Certbot so
    making regular backups of this folder is ideal.
  - If you like Certbot, please consider supporting our work by:
