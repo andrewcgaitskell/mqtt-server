@@ -1,0 +1,5 @@
+sudo cp /etc/nginx/sites-available/default /home/mqttuser/hello/default202011080
+703
+
+sudo cp /home/mqttuser/hello/default202011080703 /etc/nginx/sites-available/default
+
